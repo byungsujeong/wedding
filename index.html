@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta property="og:description" content="소중한 날, 함께해 주세요" />
     <meta property="og:title" content="정병수 & 김선아 결혼예배에 초대합니다." />
     <title>정병수 & 김선아 결혼예배</title>
@@ -967,6 +967,19 @@
             font-weight: 700;
             color: #333;
         }
+
+        .account-number-clickable {
+            font-weight: 700;
+            color: #333;
+            cursor: pointer;
+            /* 위, 아래와 동일한 스타일만 적용 */
+            padding: 0;
+            border-radius: 0;
+            transition: none;
+            position: static;
+            background: none;
+        }
+
         .footer-image {
             width: 100%;
             margin: 0 auto 0 auto;
@@ -1164,25 +1177,25 @@
                 </div>
                 <div class="donation-content">
                     <hr class="divider">
-                    <div class="info-row" onclick="copyToClipboard('302-1178-9960-21')">
+                    <div class="info-row">
                         <div class="info-img">
                             <img src="images/slide9_img4.png" alt="신랑측 배경경" width="80" height="30" />
                             <div class="overlay-label">신랑측</div>
                         </div>
                         <div class="info-text">
                             농협은행<br>
-                            302-1178-9960-21<br>
+                            <span onclick="copyToClipboard('302-1178-9960-21')">302-1178-9960-21</span><br>
                             정 충 구
                         </div>
                     </div>
-                    <div class="info-row shinbu" onclick="copyToClipboard('113-2009-7344-01')">
+                    <div class="info-row shinbu">
                         <div class="info-img">
                             <img src="images/slide9_img4.png" alt="신부측 배경" width="80" height="30" />
                             <div class="overlay-label">신부측</div>
                         </div>
                         <div class="info-text">
                             부산은행<br>
-                            113-2009-7344-01<br>
+                            <span onclick="copyToClipboard('113-2009-7344-01')">113-2009-7344-01</span><br>
                             대한예수교장로회<br>
                             부산개금교회
                         </div>
