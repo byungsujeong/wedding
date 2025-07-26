@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>PDF 페이지</title>
+  <title>정병수 & 김선아 결혼예배</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
@@ -14,11 +14,49 @@
     #pdf-container {
       width: 100%;
     }
+    .page-container {
+      position: relative;
+      margin: 0 auto;
+      max-width: 100%;
+    }
     canvas {
       display: block;
       margin: 0 auto;
       max-width: 100%;
       height: auto !important;
+    }
+    .textLayer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      opacity: 0.2;
+      line-height: 1.0;
+      pointer-events: auto;
+    }
+    .textLayer > span {
+      color: transparent;
+      position: absolute;
+      white-space: pre;
+      cursor: text;
+      transform-origin: 0% 0%;
+    }
+    .textLayer .highlight {
+      margin: -1px;
+      padding: 1px;
+      background-color: rgb(180, 0, 170);
+      border-radius: 4px;
+    }
+    .textLayer .highlight.selected {
+      background-color: rgb(0, 100, 0);
+    }
+    .textLayer ::selection {
+      background: rgba(0, 0, 255, 0.3);
+    }
+    .textLayer ::-moz-selection {
+      background: rgba(0, 0, 255, 0.3);
     }
   </style>
 </head>
@@ -38,17 +76,49 @@
       const renderPage = num => {
         pdf.getPage(num).then(page => {
           const viewport = page.getViewport({ scale: 2.0 });
+          
+          // 페이지 컨테이너 생성
+          const pageContainer = document.createElement("div");
+          pageContainer.className = "page-container";
+          pageContainer.style.width = viewport.width + "px";
+          pageContainer.style.height = viewport.height + "px";
+          container.appendChild(pageContainer);
+
+          // 캔버스 생성
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d");
           canvas.height = viewport.height;
           canvas.width = viewport.width;
-          container.appendChild(canvas);
+          pageContainer.appendChild(canvas);
+
+          // 텍스트 레이어 생성
+          const textLayerDiv = document.createElement("div");
+          textLayerDiv.className = "textLayer";
+          textLayerDiv.style.width = viewport.width + "px";
+          textLayerDiv.style.height = viewport.height + "px";
+          pageContainer.appendChild(textLayerDiv);
 
           const renderContext = {
             canvasContext: context,
             viewport: viewport
           };
-          page.render(renderContext).promise.then(() => {
+
+          // 페이지 렌더링
+          const renderTask = page.render(renderContext);
+          
+          // 텍스트 콘텐츠 가져오기
+          const textContent = page.getTextContent();
+
+          Promise.all([renderTask.promise, textContent]).then(([_, textContent]) => {
+            // 텍스트 레이어 렌더링
+            pdfjsLib.renderTextLayer({
+              textContent: textContent,
+              container: textLayerDiv,
+              viewport: viewport,
+              textDivs: []
+            });
+            
+            // 다음 페이지 렌더링
             if (num < pdf.numPages) renderPage(num + 1);
           });
         });
