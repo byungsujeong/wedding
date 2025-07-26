@@ -38,12 +38,22 @@
       max-width: 100vw;
       background-color: #fff;
       overflow: hidden;
+      border-bottom: 1px solid #e9ecef;
     }
     
-    /* 페이지 간 여백 최소화 */
+    /* 페이지 간 여백 완전 제거 */
     .page-container + .page-container {
-      margin-top: 1px;
-      border-top: 1px solid #e9ecef;
+      margin-top: 0;
+      border-top: none;
+    }
+    
+    /* 첫 번째와 마지막 페이지의 경계선 제거 */
+    .page-container:first-child {
+      border-top: none;
+    }
+    
+    .page-container:last-child {
+      border-bottom: none;
     }
     
     canvas {
@@ -56,7 +66,6 @@
       vertical-align: top;
     }
     
-    /* 텍스트 레이어 - 복사 가능한 텍스트 */
     .textLayer {
       position: absolute;
       left: 0;
@@ -70,12 +79,11 @@
       -webkit-user-select: text !important;
       -moz-user-select: text !important;
       -ms-user-select: text !important;
-      z-index: 2;
+      z-index: 5;
     }
     
-    .textLayer span,
-    .textLayer div {
-      color: transparent !important;
+    .textLayer > span {
+      color: transparent;
       position: absolute;
       white-space: pre;
       cursor: text;
@@ -85,20 +93,16 @@
       -moz-user-select: text !important;
       -ms-user-select: text !important;
       pointer-events: auto;
-      font-family: sans-serif;
     }
     
     .textLayer ::selection {
-      background: rgba(0, 123, 255, 0.3) !important;
-      color: transparent !important;
+      background: rgba(0, 100, 255, 0.3);
     }
     
     .textLayer ::-moz-selection {
-      background: rgba(0, 123, 255, 0.3) !important;
-      color: transparent !important;
+      background: rgba(0, 100, 255, 0.3);
     }
     
-    /* 링크 레이어 - 클릭 가능한 링크 */
     .linkLayer {
       position: absolute;
       left: 0;
@@ -106,36 +110,35 @@
       right: 0;
       bottom: 0;
       overflow: hidden;
-      pointer-events: none;
-      z-index: 3;
+      pointer-events: auto;
+      z-index: 10;
     }
     
-    .linkLayer a {
+    .linkLayer > a {
       position: absolute;
       color: transparent;
       text-decoration: none;
       display: block;
       cursor: pointer;
-      pointer-events: auto;
       border: 2px solid transparent;
       transition: all 0.2s ease;
-      z-index: 10;
+      pointer-events: auto;
     }
     
-    .linkLayer a:hover {
-      background: rgba(255, 193, 7, 0.3) !important;
+    .linkLayer > a:hover {
+      background: rgba(255, 193, 7, 0.3);
       border-color: rgba(255, 193, 7, 0.6);
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    .linkLayer a:active {
-      background: rgba(255, 193, 7, 0.5) !important;
+    .linkLayer > a:active {
+      background: rgba(255, 193, 7, 0.5);
       transform: scale(0.98);
     }
     
     /* 모바일 터치 최적화 */
     @media (max-width: 768px) {
-      .linkLayer a {
+      .linkLayer > a {
         min-height: 44px;
         min-width: 44px;
       }
@@ -144,9 +147,8 @@
         font-size: 14px;
       }
       
-      .page-container + .page-container {
-        margin-top: 0;
-        border-top: none;
+      .linkLayer > a:hover {
+        background: rgba(255, 193, 7, 0.4);
       }
     }
     
@@ -156,14 +158,9 @@
         font-size: 12px;
       }
       
-      .linkLayer a {
+      .linkLayer > a {
         min-height: 48px;
         min-width: 48px;
-      }
-      
-      .page-container + .page-container {
-        margin-top: 0;
-        border-top: none;
       }
     }
     
@@ -177,10 +174,10 @@
       color: #495057;
       z-index: 1000;
       text-align: center;
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.9);
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     
     .loading::after {
@@ -199,20 +196,22 @@
       to { transform: rotate(360deg); }
     }
     
-    /* 디버깅용 - 텍스트 레이어 확인 */
-    .debug-mode .textLayer {
-      background: rgba(255, 0, 0, 0.1);
+    /* 스크롤바 스타일링 */
+    ::-webkit-scrollbar {
+      width: 8px;
     }
     
-    .debug-mode .textLayer span,
-    .debug-mode .textLayer div {
-      color: red !important;
-      background: rgba(255, 255, 0, 0.2);
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
     }
     
-    .debug-mode .linkLayer a {
-      background: rgba(0, 255, 0, 0.3) !important;
-      border: 2px solid green !important;
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
     }
   </style>
 </head>
@@ -229,20 +228,15 @@
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    // 디버그 모드 (URL에 ?debug=1 추가하면 활성화)
-    const isDebugMode = new URLSearchParams(window.location.search).get('debug') === '1';
-    if (isDebugMode) {
-      document.body.classList.add('debug-mode');
-      console.log('Debug mode enabled');
-    }
-
     // 화면 너비에 맞는 최적 스케일 계산
     function getOptimalScale() {
       const screenWidth = window.innerWidth;
+      const dpr = window.devicePixelRatio || 1;
       
-      if (screenWidth <= 480) return 1.2;
-      if (screenWidth <= 768) return 1.5;
-      return 2.0;
+      // 고해상도 디스플레이를 고려한 스케일 조정
+      if (screenWidth <= 480) return 1.5 * Math.min(dpr, 2);
+      if (screenWidth <= 768) return 1.8 * Math.min(dpr, 2);
+      return 2.2 * Math.min(dpr, 2);
     }
 
     // 뷰포트 크기에 맞춰 캔버스 크기 조정
@@ -278,11 +272,9 @@
 
     pdfjsLib.getDocument(url).promise.then(pdf => {
       loading.style.display = 'none';
-      console.log('PDF loaded successfully, pages:', pdf.numPages);
       
       const renderPage = num => {
         pdf.getPage(num).then(page => {
-          console.log(`Rendering page ${num}`);
           const scale = getOptimalScale();
           const viewport = page.getViewport({ scale: scale });
           
@@ -335,50 +327,26 @@
           const annotations = page.getAnnotations();
 
           Promise.all([renderTask.promise, textContent, annotations]).then(([_, textContent, annotations]) => {
-            console.log(`Page ${num} rendered, processing text and links`);
-            
-            // 텍스트 레이어 렌더링
+            // 텍스트 레이어 렌더링 (화면 크기에 맞춰 스케일 조정)
             const textViewport = page.getViewport({ scale: scale * displayScale });
             
             try {
-              // PDF.js 최신 버전 방식
-              if (pdfjsLib.TextLayer) {
-                const textLayer = new pdfjsLib.TextLayer({
-                  textContentSource: textContent,
-                  container: textLayerDiv,
-                  viewport: textViewport
-                });
-                textLayer.render();
-                console.log(`Text layer rendered for page ${num} using new API`);
-              } else {
-                throw new Error('TextLayer not available');
-              }
+              pdfjsLib.renderTextLayer({
+                textContentSource: textContent,
+                container: textLayerDiv,
+                viewport: textViewport,
+                textDivs: []
+              });
             } catch (error) {
-              console.warn(`New TextLayer API failed for page ${num}:`, error);
-              // 레거시 방식으로 폴백
-              try {
-                pdfjsLib.renderTextLayer({
-                  textContentSource: textContent,
-                  container: textLayerDiv,
-                  viewport: textViewport,
-                  textDivs: []
-                });
-                console.log(`Text layer rendered for page ${num} using legacy API`);
-              } catch (legacyError) {
-                console.error(`Both TextLayer methods failed for page ${num}:`, legacyError);
-                // 수동으로 텍스트 레이어 생성
-                createManualTextLayer(textContent, textLayerDiv, textViewport, num);
-              }
+              console.warn('Text layer rendering failed:', error);
             }
 
-            // 링크 레이어 생성
-            console.log(`Processing ${annotations.length} annotations for page ${num}`);
+            // 개선된 링크 레이어 생성
             annotations.forEach((annotation, index) => {
               if (annotation.subtype === 'Link') {
-                console.log(`Creating link ${index} for page ${num}:`, annotation);
                 const link = document.createElement('a');
                 
-                // URL 처리
+                // URL 처리 개선
                 let linkUrl = null;
                 if (annotation.url) {
                   linkUrl = sanitizeUrl(annotation.url);
@@ -391,102 +359,85 @@
                   link.target = '_blank';
                   link.rel = 'noopener noreferrer';
                   
-                  // 링크 클릭 이벤트
+                  // 링크 클릭 이벤트 추가
                   link.addEventListener('click', function(e) {
-                    console.log('Link clicked:', linkUrl);
-                    // 모바일에서는 touchend 이벤트로 처리
+                    // 터치 디바이스에서 더블 탭 방지
                     if ('ontouchstart' in window) {
                       e.preventDefault();
                       window.open(linkUrl, '_blank', 'noopener,noreferrer');
                     }
-                  });
-                  
-                  link.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Link touched:', linkUrl);
-                    window.open(linkUrl, '_blank', 'noopener,noreferrer');
                   });
                 } else if (annotation.dest) {
                   // 내부 링크 처리
                   link.href = '#page-' + annotation.dest;
                   link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    e.stopPropagation();
                     const targetPage = document.getElementById('page-' + annotation.dest);
                     if (targetPage) {
                       targetPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                   });
                 } else {
-                  console.log(`Skipping annotation ${index} - no valid URL or destination`);
+                  // 링크가 없는 경우 스킵
                   return;
                 }
                 
                 // 링크 위치 및 크기 계산
                 const rect = annotation.rect;
-                const pageHeight = textViewport.height;
-                const scaleX = displayScale;
-                const scaleY = displayScale;
-                
-                // PDF 좌표계를 HTML 좌표계로 변환
-                const left = rect[0] * scaleX;
-                const bottom = rect[1] * scaleY;
-                const right = rect[2] * scaleX;
-                const top = rect[3] * scaleY;
-                
-                // HTML에서는 top이 위에서부터의 거리
-                const htmlTop = pageHeight - top;
-                const width = right - left;
-                const height = top - bottom;
+                const linkScale = displayScale;
                 
                 link.style.position = 'absolute';
-                link.style.left = left + 'px';
-                link.style.top = htmlTop + 'px';
-                link.style.width = width + 'px';
-                link.style.height = height + 'px';
+                link.style.left = (rect[0] * linkScale) + 'px';
+                link.style.top = ((textViewport.height - rect[3] * scale) * displayScale / scale) + 'px';
+                link.style.width = ((rect[2] - rect[0]) * linkScale) + 'px';
+                link.style.height = ((rect[3] - rect[1]) * linkScale) + 'px';
                 link.style.display = 'block';
                 link.style.color = 'transparent';
                 link.style.textDecoration = 'none';
                 link.style.cursor = 'pointer';
+                link.style.zIndex = '20';
                 
-                // 접근성을 위한 속성
+                // 접근성을 위한 속성 추가
                 link.setAttribute('aria-label', '링크: ' + (linkUrl || '내부 링크'));
                 link.setAttribute('data-link-index', index);
-                link.setAttribute('data-page', num);
                 
                 // 터치 디바이스를 위한 최소 크기 보장
                 if ('ontouchstart' in window) {
                   const minSize = 44;
-                  if (width < minSize) {
+                  const currentWidth = parseFloat(link.style.width);
+                  const currentHeight = parseFloat(link.style.height);
+                  
+                  if (currentWidth < minSize) {
                     link.style.width = minSize + 'px';
-                    link.style.left = (left - (minSize - width) / 2) + 'px';
+                    const leftOffset = (minSize - currentWidth) / 2;
+                    link.style.left = (parseFloat(link.style.left) - leftOffset) + 'px';
                   }
-                  if (height < minSize) {
+                  
+                  if (currentHeight < minSize) {
                     link.style.height = minSize + 'px';
-                    link.style.top = (htmlTop - (minSize - height) / 2) + 'px';
+                    const topOffset = (minSize - currentHeight) / 2;
+                    link.style.top = (parseFloat(link.style.top) - topOffset) + 'px';
                   }
                 }
                 
                 linkLayerDiv.appendChild(link);
-                console.log(`Link ${index} created for page ${num} at (${left}, ${htmlTop}) size (${width}, ${height})`);
               }
             });
             
             // 다음 페이지 렌더링
             if (num < pdf.numPages) {
               renderPage(num + 1);
-            } else {
-              console.log('All pages rendered successfully');
             }
           }).catch(error => {
-            console.error(`Error rendering page ${num} content:`, error);
+            console.error('Error rendering page content:', error);
+            // 다음 페이지 렌더링 계속 진행
             if (num < pdf.numPages) {
               renderPage(num + 1);
             }
           });
         }).catch(error => {
-          console.error(`Error loading page ${num}:`, error);
+          console.error('Error loading page:', error);
+          // 다음 페이지 렌더링 계속 진행
           if (num < pdf.numPages) {
             renderPage(num + 1);
           }
@@ -500,87 +451,60 @@
       loading.style.color = '#dc3545';
     });
 
-    // 수동 텍스트 레이어 생성 (폴백 함수)
-    function createManualTextLayer(textContent, container, viewport, pageNum) {
-      console.log(`Creating manual text layer for page ${pageNum}`);
-      textContent.items.forEach(function(textItem, index) {
-        const textDiv = document.createElement('span');
-        textDiv.textContent = textItem.str;
-        textDiv.style.position = 'absolute';
-        textDiv.style.left = textItem.transform[4] + 'px';
-        textDiv.style.top = (viewport.height - textItem.transform[5]) + 'px';
-        textDiv.style.fontSize = Math.abs(textItem.transform[0]) + 'px';
-        textDiv.style.fontFamily = textItem.fontName || 'sans-serif';
-        textDiv.style.color = 'transparent';
-        textDiv.style.cursor = 'text';
-        textDiv.style.userSelect = 'text';
-        textDiv.style.webkitUserSelect = 'text';
-        textDiv.style.mozUserSelect = 'text';
-        textDiv.style.msUserSelect = 'text';
-        textDiv.setAttribute('data-text-index', index);
-        container.appendChild(textDiv);
-      });
-      console.log(`Manual text layer created for page ${pageNum} with ${textContent.items.length} items`);
-    }
-
-    // 화면 크기 변경 시 재렌더링
+    // 화면 크기 변경 시 재렌더링 (디바운싱 적용)
     let resizeTimeout;
     window.addEventListener('resize', function() {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(function() {
+        // 화면 방향 변경이나 크기 변경 시에만 새로고침
         const currentWidth = window.innerWidth;
         if (Math.abs(currentWidth - (window.lastWidth || currentWidth)) > 50) {
-          console.log('Screen size changed significantly, reloading...');
           window.lastWidth = currentWidth;
           location.reload();
         }
       }, 500);
     });
 
+    // 초기 화면 너비 저장
     window.lastWidth = window.innerWidth;
 
-    // 텍스트 선택 테스트 함수
-    window.testTextSelection = function() {
-      const textLayers = document.querySelectorAll('.textLayer');
-      console.log('Testing text selection on', textLayers.length, 'text layers');
-      
-      textLayers.forEach((layer, index) => {
-        const spans = layer.querySelectorAll('span, div');
-        console.log(`Text layer ${index} has ${spans.length} text elements`);
+    // 터치 스크롤 최적화
+    let isScrolling = false;
+    let touchStartY = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+      isScrolling = true;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', function(e) {
+      if (isScrolling) {
+        const touchCurrentY = e.touches[0].clientY;
+        const deltaY = touchStartY - touchCurrentY;
         
-        spans.forEach((span, spanIndex) => {
-          if (spanIndex < 3) { // 처음 3개만 로그
-            console.log(`  Element ${spanIndex}:`, span.textContent, span.style.cssText);
-          }
-        });
-      });
-    };
-
-    // 링크 테스트 함수
-    window.testLinks = function() {
-      const linkLayers = document.querySelectorAll('.linkLayer');
-      console.log('Testing links on', linkLayers.length, 'link layers');
-      
-      linkLayers.forEach((layer, index) => {
-        const links = layer.querySelectorAll('a');
-        console.log(`Link layer ${index} has ${links.length} links`);
-        
-        links.forEach((link, linkIndex) => {
-          console.log(`  Link ${linkIndex}:`, link.href, link.getBoundingClientRect());
-        });
-      });
-    };
-
-    // 페이지 로드 완료 후 테스트 함수 실행
-    setTimeout(() => {
-      if (isDebugMode) {
-        console.log('Running debug tests...');
-        window.testTextSelection();
-        window.testLinks();
+        // 수평 스크롤 방지
+        if (Math.abs(deltaY) < 10) {
+          e.preventDefault();
+        }
       }
-    }, 3000);
+    }, { passive: false });
+    
+    document.addEventListener('touchend', function() {
+      setTimeout(function() {
+        isScrolling = false;
+      }, 100);
+    }, { passive: true });
 
-    console.log('PDF viewer initialized');
+    // 키보드 네비게이션 지원
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        e.preventDefault();
+      } else if (e.key === 'End') {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        e.preventDefault();
+      }
+    });
   </script>
 </body>
 </html>
