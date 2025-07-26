@@ -89,6 +89,7 @@
           pageContainer.className = "page-container";
           pageContainer.style.width = viewport.width + "px";
           pageContainer.style.height = viewport.height + "px";
+          pageContainer.style.setProperty('--scale-factor', viewport.scale);
           container.appendChild(pageContainer);
 
           // 캔버스 생성
@@ -125,20 +126,30 @@
           const annotations = page.getAnnotations();
 
           Promise.all([renderTask.promise, textContent, annotations]).then(([_, textContent, annotations]) => {
-            // 텍스트 레이어 렌더링
+            // 텍스트 레이어 렌더링 (최신 API 사용)
             pdfjsLib.renderTextLayer({
-              textContent: textContent,
+              textContentSource: textContent,
               container: textLayerDiv,
               viewport: viewport,
               textDivs: []
             });
 
-            // 링크 레이어 렌더링
-            pdfjsLib.renderLinkLayer({
-              linkDivs: [],
-              links: annotations,
-              container: linkLayerDiv,
-              viewport: viewport
+            // 링크 레이어 수동 생성
+            annotations.forEach(annotation => {
+              if (annotation.subtype === 'Link') {
+                const link = document.createElement('a');
+                link.href = annotation.url || '#';
+                link.style.position = 'absolute';
+                link.style.left = annotation.rect[0] * viewport.scale + 'px';
+                link.style.top = (viewport.height - annotation.rect[1] * viewport.scale) + 'px';
+                link.style.width = (annotation.rect[2] - annotation.rect[0]) * viewport.scale + 'px';
+                link.style.height = (annotation.rect[3] - annotation.rect[1]) * viewport.scale + 'px';
+                link.style.display = 'block';
+                link.style.color = 'transparent';
+                link.style.textDecoration = 'none';
+                link.style.zIndex = '1';
+                linkLayerDiv.appendChild(link);
+              }
             });
             
             // 다음 페이지 렌더링
