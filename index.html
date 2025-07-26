@@ -1,587 +1,1325 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>정병수 & 김선아 결혼예배</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow-x: hidden;
-      background-color: #f8f9fa;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    
-    #pdf-container {
-      width: 100vw;
-      max-width: 100vw;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #f8f9fa;
-      padding: 0;
-    }
-    
-    .page-container {
-      position: relative;
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      max-width: 100vw;
-      background-color: #fff;
-      overflow: hidden;
-    }
-    
-    /* 페이지 간 여백 최소화 */
-    .page-container + .page-container {
-      margin-top: 1px;
-      border-top: 1px solid #e9ecef;
-    }
-    
-    canvas {
-      display: block;
-      width: 100vw !important;
-      max-width: 100vw !important;
-      height: auto !important;
-      margin: 0;
-      padding: 0;
-      vertical-align: top;
-    }
-    
-    /* 텍스트 레이어 - 복사 가능한 텍스트 */
-    .textLayer {
-      position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      overflow: hidden;
-      line-height: 1.0;
-      pointer-events: auto;
-      user-select: text !important;
-      -webkit-user-select: text !important;
-      -moz-user-select: text !important;
-      -ms-user-select: text !important;
-      z-index: 2;
-    }
-    
-    .textLayer span,
-    .textLayer div {
-      color: transparent !important;
-      position: absolute;
-      white-space: pre;
-      cursor: text;
-      transform-origin: 0% 0%;
-      user-select: text !important;
-      -webkit-user-select: text !important;
-      -moz-user-select: text !important;
-      -ms-user-select: text !important;
-      pointer-events: auto;
-      font-family: sans-serif;
-    }
-    
-    .textLayer ::selection {
-      background: rgba(0, 123, 255, 0.3) !important;
-      color: transparent !important;
-    }
-    
-    .textLayer ::-moz-selection {
-      background: rgba(0, 123, 255, 0.3) !important;
-      color: transparent !important;
-    }
-    
-    /* 링크 레이어 - 클릭 가능한 링크 */
-    .linkLayer {
-      position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      overflow: hidden;
-      pointer-events: none;
-      z-index: 3;
-    }
-    
-    .linkLayer a {
-      position: absolute;
-      color: transparent;
-      text-decoration: none;
-      display: block;
-      cursor: pointer;
-      pointer-events: auto;
-      border: 2px solid transparent;
-      transition: all 0.2s ease;
-      z-index: 10;
-    }
-    
-    .linkLayer a:hover {
-      background: rgba(255, 193, 7, 0.3) !important;
-      border-color: rgba(255, 193, 7, 0.6);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .linkLayer a:active {
-      background: rgba(255, 193, 7, 0.5) !important;
-      transform: scale(0.98);
-    }
-    
-    /* 모바일 터치 최적화 */
-    @media (max-width: 768px) {
-      .linkLayer a {
-        min-height: 44px;
-        min-width: 44px;
-      }
-      
-      .textLayer {
-        font-size: 14px;
-      }
-      
-      .page-container + .page-container {
-        margin-top: 0;
-        border-top: none;
-      }
-    }
-    
-    /* 매우 작은 화면 */
-    @media (max-width: 480px) {
-      .textLayer {
-        font-size: 12px;
-      }
-      
-      .linkLayer a {
-        min-height: 48px;
-        min-width: 48px;
-      }
-      
-      .page-container + .page-container {
-        margin-top: 0;
-        border-top: none;
-      }
-    }
-    
-    /* 로딩 인디케이터 */
-    .loading {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 18px;
-      color: #495057;
-      z-index: 1000;
-      text-align: center;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    
-    .loading::after {
-      content: '';
-      display: block;
-      width: 24px;
-      height: 24px;
-      border: 3px solid #dee2e6;
-      border-radius: 50%;
-      border-top-color: #007bff;
-      animation: spin 1s linear infinite;
-      margin: 10px auto 0;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    /* 디버깅용 - 텍스트 레이어 확인 */
-    .debug-mode .textLayer {
-      background: rgba(255, 0, 0, 0.1);
-    }
-    
-    .debug-mode .textLayer span,
-    .debug-mode .textLayer div {
-      color: red !important;
-      background: rgba(255, 255, 0, 0.2);
-    }
-    
-    .debug-mode .linkLayer a {
-      background: rgba(0, 255, 0, 0.3) !important;
-      border: 2px solid green !important;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>9구역 모바일 레이아웃</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background-color: #f8f9fa;
+            font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .section {
+            width: 100%;
+            min-height: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-content {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        /* 1구역에만 배경 이미지 적용 */
+        .section-1 .section-content::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 120px;
+            height: 120px;
+            background-image: url('images/slide1_img10.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.2;
+            z-index: 1;
+            transform: rotate(15deg);
+        }
+
+        .section-1 .section-content::after {
+            content: '';
+            position: absolute;
+            top: 80px;
+            left: -30px;
+            width: 100px;
+            height: 100px;
+            background-image: url('images/slide1_img11.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.2;
+            z-index: 1;
+            transform: rotate(-15deg);
+        }
+
+        .section-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .section-description {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .section-features {
+            list-style: none;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .section-features li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 14px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .section-features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        /* 첫 번째 구역 - 결혼식 초대장 스타일 */
+        .wedding-date {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        .couple-names {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.3;
+            letter-spacing: 1px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        .invitation-text {
+            font-size: 16px;
+            color: #666660;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        .wedding-image {
+            width: 100%;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .wedding-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+        }
+
+        .wedding-time {
+            font-size: 16px;
+            font-weight: 500;
+            color: #393936;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        .wedding-location {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        /* 두 번째 구역 - 초대장 스타일 */
+        .invitation-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header-image {
+            width: 80px;
+            height: auto;
+            margin-bottom: 3px;
+        }
+
+        .invitation-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            letter-spacing: 3px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        .invitation-message {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .invitation-message p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #666;
+            font-family: 'Noto Sans', sans-serif;
+            margin-bottom: 8px;
+        }
+
+        .invitation-message p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 갤러리 이미지 스타일 */
+        .gallery-image {
+            margin-top: 25px;
+            width: 100%;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-img:hover {
+            transform: scale(1.05);
+        }
+
+        /* 이미지 그리드 스타일 */
+        .image-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .image-grid .grid-item {
+            width: 100%;
+            aspect-ratio: 2/3;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .grid-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .grid-image:hover {
+            transform: scale(1.05);
+        }
+
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(142, 142, 142, 0.9);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .close:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .couple-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-overlay-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .background-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .overlay-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: auto;
+            z-index: 2;
+        }
+
+        .text-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 3;
+        }
+
+        .couple-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .grid-item {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .grid-item p {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+            line-height: 1.4;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        .grid-item h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+            letter-spacing: 1px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+
+
+        /* 각 구역별 배경색과 스타일 */
+        .section-1 {
+            background: #ffffff;
+        }
+
+        .section-2 {
+            background: #ffffff;
+        }
+
+        .section-3 {
+            background: #ffffff;
+        }
+
+        .section-4 {
+            background: #ffffff;
+        }
+
+        .section-5 {
+            background: #ffffff;
+        }
+
+        .section-6 {
+            background: #ffffff;
+        }
+
+        .section-7 {
+            background: #ffffff;
+        }
+
+        .section-8 {
+            background: #ffffff;
+        }
+
+        .section-9 {
+            background: #ffffff;
+        }
+
+        .section-8 .section-content {
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+        .section-8 .section-content::after {
+            content: '';
+            position: absolute;
+            top: 80px;
+            right: -40px;
+            width: 120px;
+            height: 120px;
+            background-image: url('images/slide8_img2.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.2;
+            z-index: -1;
+        }
+
+        /* 모바일 최적화 */
+        @media (max-width: 768px) {
+            .section {
+                padding: 30px 15px;
+                min-height: auto;
+            }
+
+            .section-1 .section-content::before {
+                width: 100px;
+                height: 100px;
+                top: -20px;
+                right: -20px;
+            }
+
+            .section-1 .section-content::after {
+                width: 80px;
+                height: 80px;
+                top: 70px;
+                left: -20px;
+            }
+
+            .section-content {
+                padding: 25px 20px;
+                border-radius: 15px;
+            }
+
+            .section-number {
+                font-size: 36px;
+                margin-bottom: 15px;
+            }
+
+            .section-title {
+                font-size: 20px;
+                margin-bottom: 12px;
+            }
+
+            .section-description {
+                font-size: 14px;
+                margin-bottom: 15px;
+            }
+
+            .section-features li {
+                font-size: 13px;
+                padding: 6px 0;
+                padding-left: 18px;
+            }
+
+            /* 첫 번째 구역 모바일 최적화 */
+            .wedding-date {
+                font-size: 28px;
+                margin-bottom: 18px;
+            }
+
+            .couple-names {
+                font-size: 20px;
+                margin-bottom: 12px;
+            }
+
+            .invitation-text {
+                font-size: 14px;
+                margin-bottom: 25px;
+            }
+
+            .wedding-image {
+                margin-bottom: 20px;
+                border-radius: 10px;
+            }
+
+            .wedding-time {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .wedding-location {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+            /* 두 번째 구역 모바일 최적화 */
+            .invitation-title {
+                font-size: 20px;
+                letter-spacing: 2px;
+            }
+
+            .invitation-message p {
+                font-size: 15px;
+                line-height: 1.5;
+            }
+
+            .gallery-image {
+                margin-top: 20px;
+            }
+
+            .image-grid {
+                gap: 12px;
+            }
+
+            .image-overlay-container {
+                margin-bottom: 15px;
+            }
+
+            .overlay-image {
+                width: 55%;
+            }
+
+            .text-overlay {
+                padding: 15px;
+            }
+
+            .couple-grid {
+                gap: 12px;
+            }
+
+            .grid-item p {
+                font-size: 11px;
+            }
+
+            .grid-item h3 {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .section {
+                padding: 20px 10px;
+            }
+
+            .section-1 .section-content::before {
+                width: 80px;
+                height: 80px;
+                top: -15px;
+                right: -15px;
+            }
+
+            .section-1 .section-content::after {
+                width: 60px;
+                height: 60px;
+                top: 60px;
+                left: -15px;
+            }
+
+            .section-content {
+                padding: 20px 15px;
+                border-radius: 12px;
+            }
+
+            .section-number {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+
+            .section-title {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+
+            .section-description {
+                font-size: 13px;
+                margin-bottom: 12px;
+            }
+
+            .section-features li {
+                font-size: 12px;
+                padding: 5px 0;
+                padding-left: 16px;
+            }
+
+            /* 두 번째 구역 모바일 최적화 */
+            .invitation-title {
+                font-size: 18px;
+                letter-spacing: 1px;
+            }
+
+            .invitation-message p {
+                font-size: 14px;
+                line-height: 1.4;
+            }
+
+            .gallery-image {
+                margin-top: 15px;
+            }
+
+            .image-grid {
+                gap: 10px;
+            }
+
+            .image-overlay-container {
+                margin-bottom: 10px;
+            }
+
+            .overlay-image {
+                width: 50%;
+            }
+
+            .text-overlay {
+                padding: 10px;
+            }
+
+            .couple-grid {
+                gap: 10px;
+            }
+
+            .grid-item p {
+                font-size: 10px;
+            }
+
+            .grid-item h3 {
+                font-size: 14px;
+            }
+        }
+
+        /* 스크롤 스냅 */
+        .container {
+            scroll-snap-type: y proximity;
+        }
+
+        .section {
+            scroll-snap-align: center;
+        }
+
+        /* 스크롤바 숨기기 */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 스크롤 인디케이터 */
+        .scroll-indicator {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .scroll-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .scroll-dot.active {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.2);
+        }
+
+        @media (max-width: 768px) {
+            .scroll-indicator {
+                right: 15px;
+            }
+
+            .scroll-dot {
+                width: 6px;
+                height: 6px;
+            }
+        }
+        .weddingday-image {
+            width: 100%;
+            max-width: 340px;
+            margin: 18px auto 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .weddingday-image img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 12px;
+            display: block;
+        }
+        .weddingday-date {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            margin-bottom: 8px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .location-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+        .location-info::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: -60px;
+            width: 120px;
+            height: 120px;
+            background-image: url('images/slide7_img2.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.2;
+            z-index: -1;
+        }
+        .location-address {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 15px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .location-image {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .location-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 3px solid #333;
+            border-radius: 8px;
+        }
+        .location-links {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        .map-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #8ea682;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .map-link:hover {
+            background-color: #6e8a62;
+        }
+        .map-link.kakao {
+            background-color: #8ea682;
+            color: white;
+        }
+        .map-link.kakao:hover {
+            background-color: #6e8a62;
+        }
+        .map-link.naver {
+            background-color: #8ea682;
+            color: white;
+        }
+        .map-link.naver:hover {
+            background-color: #6e8a62;
+        }
+        .info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 40px;
+            margin-left: 75px;
+        }
+        .info-img {
+            flex: 0 0 auto; /* 이미지 크기 고정 */
+            width: 15px; /* 이미지 너비 */
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .overlay-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 16px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+            z-index: 2;
+            white-space: nowrap;
+        }
+        .info-text {
+            flex: 1; /* 텍스트가 차지할 공간 */
+            text-align: left; /* 텍스트 정렬 */
+            font-size: 16px;
+            color: #666;
+            line-height: 1.5;
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .donation-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        .donation-image {
+            width: 30px;
+            height: auto;
+        }
+        .donation-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            letter-spacing: 3px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .donation-content {
+            margin-top: 20px;
+            padding: 0 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .donation-content::after {
+            content: '';
+            position: absolute;
+            left: -40px;
+            bottom: -80px;
+            width: 240px;
+            height: 240px;
+            background-image: url('images/slide9_img12.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.2;
+            z-index: 0;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #333;
+            margin: 20px 0;
+        }
+        .account-section {
+            margin-bottom: 15px;
+        }
+        .account-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .account-info p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .bank-name {
+            font-weight: 700;
+            color: #333;
+        }
+        .account-number {
+            font-weight: 700;
+            color: #333;
+        }
+        .account-holder {
+            font-weight: 700;
+            color: #333;
+        }
+        .footer-image {
+            width: 100%;
+            margin: 0 auto 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .footer-image img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .info-row.shinbu {
+            position: relative;
+        }
+        .info-row.shinbu::after {
+            content: '';
+            position: absolute;
+            right: -40px;
+            bottom: 70px;
+            width: 120px;
+            height: 120px;
+            background-image: url('images/slide9_img2.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: right bottom;
+            opacity: 0.2;
+            z-index: 0;
+        }
+    </style>
 </head>
 <body>
-  <div class="loading" id="loading">PDF 로딩 중...</div>
-  <div id="pdf-container"></div>
+    <div class="container">
+        <div class="section section-1">
+            <div class="section-content">
+                <div class="wedding-date">09 / 20</div>
+                <h1 class="couple-names">정병수 & 김선아</h1>
+                <p class="invitation-text">소중한 날, 함께해 주세요</p>
+                <div class="wedding-image">
+                    <img src="images/slide1_img5.png" alt="결혼식 이미지" />
+                </div>
+                <div class="wedding-time">2025.09.20 토요일 오후 1:00</div>
+                <div class="wedding-location">고신교회</div>
+            </div>
+        </div>
 
-  <!-- PDF.js 라이브러리 로드 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    const url = "wedding.pdf";
-    const container = document.getElementById('pdf-container');
-    const loading = document.getElementById('loading');
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    // 디버그 모드 (URL에 ?debug=1 추가하면 활성화)
-    const isDebugMode = new URLSearchParams(window.location.search).get('debug') === '1';
-    if (isDebugMode) {
-      document.body.classList.add('debug-mode');
-      console.log('Debug mode enabled');
-    }
-
-    // 화면 너비에 맞는 최적 스케일 계산
-    function getOptimalScale() {
-      const screenWidth = window.innerWidth;
-      
-      if (screenWidth <= 480) return 1.2;
-      if (screenWidth <= 768) return 1.5;
-      return 2.0;
-    }
-
-    // 뷰포트 크기에 맞춰 캔버스 크기 조정
-    function adjustCanvasSize(canvas, viewport) {
-      const screenWidth = window.innerWidth;
-      const scale = screenWidth / viewport.width;
-      
-      canvas.style.width = screenWidth + 'px';
-      canvas.style.height = (viewport.height * scale) + 'px';
-      canvas.width = screenWidth * (window.devicePixelRatio || 1);
-      canvas.height = viewport.height * scale * (window.devicePixelRatio || 1);
-      
-      return scale;
-    }
-
-    // URL 유효성 검사 및 정리
-    function sanitizeUrl(url) {
-      if (!url) return null;
-      
-      // 기본적인 URL 패턴 검사
-      const urlPattern = /^(https?:\/\/|mailto:|tel:)/i;
-      if (urlPattern.test(url)) {
-        return url;
-      }
-      
-      // HTTP가 없는 경우 추가
-      if (url.includes('.') && !url.startsWith('javascript:')) {
-        return 'https://' + url;
-      }
-      
-      return null;
-    }
-
-    pdfjsLib.getDocument(url).promise.then(pdf => {
-      loading.style.display = 'none';
-      console.log('PDF loaded successfully, pages:', pdf.numPages);
-      
-      const renderPage = num => {
-        pdf.getPage(num).then(page => {
-          console.log(`Rendering page ${num}`);
-          const scale = getOptimalScale();
-          const viewport = page.getViewport({ scale: scale });
-          
-          // 페이지 컨테이너 생성
-          const pageContainer = document.createElement("div");
-          pageContainer.className = "page-container";
-          pageContainer.setAttribute('data-page-number', num);
-          pageContainer.id = 'page-' + num;
-          container.appendChild(pageContainer);
-
-          // 캔버스 생성
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-          pageContainer.appendChild(canvas);
-          
-          // 캔버스 크기를 화면에 맞게 조정
-          const displayScale = adjustCanvasSize(canvas, viewport);
-          
-          // 페이지 컨테이너 높이 설정
-          pageContainer.style.height = canvas.style.height;
-
-          // 텍스트 레이어 생성
-          const textLayerDiv = document.createElement("div");
-          textLayerDiv.className = "textLayer";
-          textLayerDiv.style.width = canvas.style.width;
-          textLayerDiv.style.height = canvas.style.height;
-          pageContainer.appendChild(textLayerDiv);
-
-          // 링크 레이어 생성
-          const linkLayerDiv = document.createElement("div");
-          linkLayerDiv.className = "linkLayer";
-          linkLayerDiv.style.width = canvas.style.width;
-          linkLayerDiv.style.height = canvas.style.height;
-          pageContainer.appendChild(linkLayerDiv);
-
-          // 고해상도 렌더링을 위한 컨텍스트 스케일링
-          const outputScale = window.devicePixelRatio || 1;
-          context.scale(outputScale, outputScale);
-
-          const renderContext = {
-            canvasContext: context,
-            viewport: page.getViewport({ scale: scale * displayScale })
-          };
-
-          // 페이지 렌더링
-          const renderTask = page.render(renderContext);
-          
-          // 텍스트 콘텐츠와 링크 가져오기
-          const textContent = page.getTextContent();
-          const annotations = page.getAnnotations();
-
-          Promise.all([renderTask.promise, textContent, annotations]).then(([_, textContent, annotations]) => {
-            console.log(`Page ${num} rendered, processing text and links`);
-            
-            // 텍스트 레이어 렌더링
-            const textViewport = page.getViewport({ scale: scale * displayScale });
-            
-            try {
-              // PDF.js 최신 버전 방식
-              if (pdfjsLib.TextLayer) {
-                const textLayer = new pdfjsLib.TextLayer({
-                  textContentSource: textContent,
-                  container: textLayerDiv,
-                  viewport: textViewport
-                });
-                textLayer.render();
-                console.log(`Text layer rendered for page ${num} using new API`);
-              } else {
-                throw new Error('TextLayer not available');
-              }
-            } catch (error) {
-              console.warn(`New TextLayer API failed for page ${num}:`, error);
-              // 레거시 방식으로 폴백
-              try {
-                pdfjsLib.renderTextLayer({
-                  textContentSource: textContent,
-                  container: textLayerDiv,
-                  viewport: textViewport,
-                  textDivs: []
-                });
-                console.log(`Text layer rendered for page ${num} using legacy API`);
-              } catch (legacyError) {
-                console.error(`Both TextLayer methods failed for page ${num}:`, legacyError);
-                // 수동으로 텍스트 레이어 생성
-                createManualTextLayer(textContent, textLayerDiv, textViewport, num);
-              }
-            }
-
-            // 링크 레이어 생성
-            console.log(`Processing ${annotations.length} annotations for page ${num}`);
-            annotations.forEach((annotation, index) => {
-              if (annotation.subtype === 'Link') {
-                console.log(`Creating link ${index} for page ${num}:`, annotation);
-                const link = document.createElement('a');
+        <div class="section section-2">
+            <div class="section-content">
+                <div class="invitation-header">
+                    <img src="images/slide2_img2.png" alt="초대장 헤더 이미지" class="header-image">
+                    <h2 class="invitation-title">INVITATION</h2>
+                </div>
                 
-                // URL 처리
-                let linkUrl = null;
-                if (annotation.url) {
-                  linkUrl = sanitizeUrl(annotation.url);
-                } else if (annotation.action && annotation.action.url) {
-                  linkUrl = sanitizeUrl(annotation.action.url);
+                <div class="invitation-message">
+                    <p>하나님의 은혜와 섭리 가운데<br>
+                    돕는 배필로 만나 하나 되게 하시는 가정을 통해<br>
+                    작은 교회를 이루고자 합니다(창 2:24).</p>
+                    <p>주님의 임재와 은혜가 저희 결혼 가운데<br>
+                    충만하시길 기도합니다(요 2:1–11).</p>
+                    <p>귀한 날 함께 오셔서 축복해 주시고<br>
+                    기도로 동행해 주시면 감사하겠습니다.</p>
+                </div>
+
+                <div class="couple-info">
+                    <img src="images/slide2_img4.png" alt="배경 이미지" class="background-image">
+                </div>
+            </div>
+        </div>
+
+        <div class="section section-3">
+            <div class="section-content">
+                <div class="invitation-header">
+                    <img src="images/slide2_img2.png" alt="갤러리 헤더 이미지" class="header-image">
+                    <h2 class="invitation-title">GALLERY</h2>
+                </div>
+                <div class="gallery-image">
+                    <img src="images/slide3_img2.png" alt="갤러리 이미지" class="gallery-img" onclick="openModal(this.src)">
+                </div>
+            </div>
+        </div>
+
+        <div class="section section-4">
+            <div class="section-content">
+                <div class="image-grid">
+                    <div class="grid-item">
+                        <img src="images/slide4_img1.png" alt="이미지 1" class="grid-image" onclick="openModal(this.src)">
+                    </div>
+                    <div class="grid-item">
+                        <img src="images/slide4_img2.png" alt="이미지 2" class="grid-image" onclick="openModal(this.src)">
+                    </div>
+                    <div class="grid-item">
+                        <img src="images/slide4_img3.png" alt="이미지 3" class="grid-image" onclick="openModal(this.src)">
+                    </div>
+                    <div class="grid-item">
+                        <img src="images/slide4_img4.png" alt="이미지 4" class="grid-image" onclick="openModal(this.src)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section section-5">
+            <div class="section-content">
+                <div class="image-grid">
+                    <div class="grid-item">
+                        <img src="images/slide5_img1.png" alt="이미지 1" class="grid-image" onclick="openModal(this.src)">
+                    </div>
+                    <div class="grid-item">
+                        <img src="images/slide5_img2.png" alt="이미지 2" class="grid-image" onclick="openModal(this.src)">
+                    </div>
+                    <div class="grid-item">
+                        <img src="images/slide5_img3.png" alt="이미지 3" class="grid-image" onclick="openModal(this.src)">
+                    </div>
+                    <div class="grid-item">
+                        <img src="images/slide5_img4.png" alt="이미지 4" class="grid-image" onclick="openModal(this.src)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section section-6">
+            <div class="section-content">
+                <div class="invitation-header">
+                    <img src="images/slide2_img2.png" alt="웨딩데이 헤더 이미지" class="header-image">
+                    <h2 class="invitation-title">WEDDING DAY</h2>
+                </div>
+                <div class="weddingday-info">
+                    <div class="weddingday-date">9 / 20</div>
+                    <div class="weddingday-time">토요일 오후 1시</div>
+                    <div class="weddingday-image">
+                        <img src="images/slide6_img2.png" alt="웨딩데이 이미지" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section section-7">
+            <div class="section-content">
+                <div class="invitation-header">
+                    <img src="images/slide2_img2.png" alt="위치 헤더 이미지" class="header-image">
+                    <h2 class="invitation-title">LOCATION</h2>
+                </div>
+                <div class="location-info">
+                    <div class="location-address">
+                        부산 사상구 가야대로213번길 12-19<br>
+                        고신교회 3층 본당<br>
+                        051-895-2251
+                    </div>
+                    <div class="location-image">
+                        <img src="images/slide7_img5.png" alt="오시는 길 이미지" />
+                    </div>
+                    <div class="location-links">
+                        <a href="https://kko.kakao.com/IB7I97uBNt" target="_blank" rel="noopener noreferrer" class="map-link kakao">카카오 지도</a>
+                        <a href="https://naver.me/5M5oEeIe" target="_blank" rel="noopener noreferrer" class="map-link naver">네이버 지도</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section section-8">
+            <div class="section-content">
+                <div class="invitation-header">
+                    <img src="images/slide2_img2.png" alt="정보 헤더 이미지" class="header-image">
+                    <h2 class="invitation-title">INFORMATION</h2>
+                </div>
+                <div class="info-row">
+                    <div class="info-img">
+                        <img src="images/slide8_img4.png" alt="주차장 안내 이미지" width="50" height="50" />
+                    </div>
+                    <div class="info-text">
+                        주차장 이용시<br>
+                        주변이 공장지대 입니다.<br>
+                        토요일은 교회 주변에<br>
+                        자유롭게 주차하시면 됩니다.
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-img">
+                        <img src="images/slide8_img1.png" alt="피로연 안내 이미지" width="50" height="50" />
+                    </div>
+                    <div class="info-text">
+                        12시부터 6층에서<br>
+                        피로연이 준비되어 있습니다.<br>
+                        자유롭게 식사하시면 됩니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section section-9">
+            <div class="section-content">
+                <div class="donation-header">
+                    <img src="images/slide9_img10.png" alt="마음 전하실 곳 이미지" class="donation-image">
+                    <h2 class="donation-title">마음 전하실 곳</h2>
+                </div>
+                <div class="donation-content">
+                    <hr class="divider">
+                    <div class="info-row" onclick="copyToClipboard('302-1178-9960-21')">
+                        <div class="info-img">
+                            <img src="images/slide9_img4.png" alt="신랑측 배경경" width="80" height="30" />
+                            <div class="overlay-label">신랑측</div>
+                        </div>
+                        <div class="info-text">
+                            농협은행<br>
+                            302-1178-9960-21<br>
+                            정 충 구
+                        </div>
+                    </div>
+                    <div class="info-row shinbu" onclick="copyToClipboard('113-2009-7344-01')">
+                        <div class="info-img">
+                            <img src="images/slide9_img4.png" alt="신부측 배경" width="80" height="30" />
+                            <div class="overlay-label">신부측</div>
+                        </div>
+                        <div class="info-text">
+                            부산은행<br>
+                            113-2009-7344-01<br>
+                            대한예수교장로회<br>
+                            부산개금교회
+                        </div>
+                    </div>
+                    <hr class="divider">
+                </div>
+                <div class="footer-image">
+                    <img src="images/slide9_img1.png" alt="footer 이미지" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스크롤 인디케이터 -->
+    <div class="scroll-indicator">
+        <div class="scroll-dot active" data-section="0"></div>
+        <div class="scroll-dot" data-section="1"></div>
+        <div class="scroll-dot" data-section="2"></div>
+        <div class="scroll-dot" data-section="3"></div>
+        <div class="scroll-dot" data-section="4"></div>
+        <div class="scroll-dot" data-section="5"></div>
+        <div class="scroll-dot" data-section="6"></div>
+        <div class="scroll-dot" data-section="7"></div>
+        <div class="scroll-dot" data-section="8"></div>
+    </div>
+
+    <!-- 이미지 모달 -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" class="modal-image" src="" alt="확대된 이미지">
+        </div>
+    </div>
+
+    <script>
+        // 스크롤 인디케이터 기능
+        const sections = document.querySelectorAll('.section');
+        const scrollDots = document.querySelectorAll('.scroll-dot');
+
+        // 스크롤 이벤트 리스너
+        window.addEventListener('scroll', () => {
+            const scrollPosition = window.scrollY;
+            const windowHeight = window.innerHeight;
+
+            sections.forEach((section, index) => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+
+                if (scrollPosition >= sectionTop - windowHeight / 2 && 
+                    scrollPosition < sectionTop + sectionHeight - windowHeight / 2) {
+                    // 현재 섹션에 해당하는 점 활성화
+                    scrollDots.forEach(dot => dot.classList.remove('active'));
+                    scrollDots[index].classList.add('active');
                 }
-                
-                if (linkUrl) {
-                  link.href = linkUrl;
-                  link.target = '_blank';
-                  link.rel = 'noopener noreferrer';
-                  
-                  // 링크 클릭 이벤트
-                  link.addEventListener('click', function(e) {
-                    console.log('Link clicked:', linkUrl);
-                    // 모바일에서는 touchend 이벤트로 처리
-                    if ('ontouchstart' in window) {
-                      e.preventDefault();
-                      window.open(linkUrl, '_blank', 'noopener,noreferrer');
-                    }
-                  });
-                  
-                  link.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Link touched:', linkUrl);
-                    window.open(linkUrl, '_blank', 'noopener,noreferrer');
-                  });
-                } else if (annotation.dest) {
-                  // 내부 링크 처리
-                  link.href = '#page-' + annotation.dest;
-                  link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const targetPage = document.getElementById('page-' + annotation.dest);
-                    if (targetPage) {
-                      targetPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  });
-                } else {
-                  console.log(`Skipping annotation ${index} - no valid URL or destination`);
-                  return;
-                }
-                
-                // 링크 위치 및 크기 계산
-                const rect = annotation.rect;
-                const pageHeight = textViewport.height;
-                const scaleX = displayScale;
-                const scaleY = displayScale;
-                
-                // PDF 좌표계를 HTML 좌표계로 변환
-                const left = rect[0] * scaleX;
-                const bottom = rect[1] * scaleY;
-                const right = rect[2] * scaleX;
-                const top = rect[3] * scaleY;
-                
-                // HTML에서는 top이 위에서부터의 거리
-                const htmlTop = pageHeight - top;
-                const width = right - left;
-                const height = top - bottom;
-                
-                link.style.position = 'absolute';
-                link.style.left = left + 'px';
-                link.style.top = htmlTop + 'px';
-                link.style.width = width + 'px';
-                link.style.height = height + 'px';
-                link.style.display = 'block';
-                link.style.color = 'transparent';
-                link.style.textDecoration = 'none';
-                link.style.cursor = 'pointer';
-                
-                // 접근성을 위한 속성
-                link.setAttribute('aria-label', '링크: ' + (linkUrl || '내부 링크'));
-                link.setAttribute('data-link-index', index);
-                link.setAttribute('data-page', num);
-                
-                // 터치 디바이스를 위한 최소 크기 보장
-                if ('ontouchstart' in window) {
-                  const minSize = 44;
-                  if (width < minSize) {
-                    link.style.width = minSize + 'px';
-                    link.style.left = (left - (minSize - width) / 2) + 'px';
-                  }
-                  if (height < minSize) {
-                    link.style.height = minSize + 'px';
-                    link.style.top = (htmlTop - (minSize - height) / 2) + 'px';
-                  }
-                }
-                
-                linkLayerDiv.appendChild(link);
-                console.log(`Link ${index} created for page ${num} at (${left}, ${htmlTop}) size (${width}, ${height})`);
-              }
             });
-            
-            // 다음 페이지 렌더링
-            if (num < pdf.numPages) {
-              renderPage(num + 1);
-            } else {
-              console.log('All pages rendered successfully');
-            }
-          }).catch(error => {
-            console.error(`Error rendering page ${num} content:`, error);
-            if (num < pdf.numPages) {
-              renderPage(num + 1);
-            }
-          });
-        }).catch(error => {
-          console.error(`Error loading page ${num}:`, error);
-          if (num < pdf.numPages) {
-            renderPage(num + 1);
-          }
         });
-      };
-      
-      renderPage(1);
-    }).catch(error => {
-      console.error('Error loading PDF:', error);
-      loading.innerHTML = 'PDF 로딩 실패<br><small>파일을 확인해주세요.</small>';
-      loading.style.color = '#dc3545';
-    });
 
-    // 수동 텍스트 레이어 생성 (폴백 함수)
-    function createManualTextLayer(textContent, container, viewport, pageNum) {
-      console.log(`Creating manual text layer for page ${pageNum}`);
-      textContent.items.forEach(function(textItem, index) {
-        const textDiv = document.createElement('span');
-        textDiv.textContent = textItem.str;
-        textDiv.style.position = 'absolute';
-        textDiv.style.left = textItem.transform[4] + 'px';
-        textDiv.style.top = (viewport.height - textItem.transform[5]) + 'px';
-        textDiv.style.fontSize = Math.abs(textItem.transform[0]) + 'px';
-        textDiv.style.fontFamily = textItem.fontName || 'sans-serif';
-        textDiv.style.color = 'transparent';
-        textDiv.style.cursor = 'text';
-        textDiv.style.userSelect = 'text';
-        textDiv.style.webkitUserSelect = 'text';
-        textDiv.style.mozUserSelect = 'text';
-        textDiv.style.msUserSelect = 'text';
-        textDiv.setAttribute('data-text-index', index);
-        container.appendChild(textDiv);
-      });
-      console.log(`Manual text layer created for page ${pageNum} with ${textContent.items.length} items`);
-    }
+        // 점 클릭 시 해당 섹션으로 스크롤
+        scrollDots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                sections[index].scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
 
-    // 화면 크기 변경 시 재렌더링
-    let resizeTimeout;
-    window.addEventListener('resize', function() {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(function() {
-        const currentWidth = window.innerWidth;
-        if (Math.abs(currentWidth - (window.lastWidth || currentWidth)) > 50) {
-          console.log('Screen size changed significantly, reloading...');
-          window.lastWidth = currentWidth;
-          location.reload();
+        // 터치 이벤트 최적화
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.changedTouches[0].screenY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartY - touchEndY;
+
+            if (Math.abs(diff) > swipeThreshold) {
+                const currentSection = Math.round(window.scrollY / window.innerHeight);
+                let targetSection;
+
+                if (diff > 0 && currentSection < sections.length - 1) {
+                    // 위로 스와이프 - 다음 섹션
+                    targetSection = currentSection + 1;
+                } else if (diff < 0 && currentSection > 0) {
+                    // 아래로 스와이프 - 이전 섹션
+                    targetSection = currentSection - 1;
+                }
+
+                if (targetSection !== undefined) {
+                    sections[targetSection].scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            }
         }
-      }, 500);
-    });
 
-    window.lastWidth = window.innerWidth;
-
-    // 텍스트 선택 테스트 함수
-    window.testTextSelection = function() {
-      const textLayers = document.querySelectorAll('.textLayer');
-      console.log('Testing text selection on', textLayers.length, 'text layers');
-      
-      textLayers.forEach((layer, index) => {
-        const spans = layer.querySelectorAll('span, div');
-        console.log(`Text layer ${index} has ${spans.length} text elements`);
-        
-        spans.forEach((span, spanIndex) => {
-          if (spanIndex < 3) { // 처음 3개만 로그
-            console.log(`  Element ${spanIndex}:`, span.textContent, span.style.cssText);
-          }
+        // 페이지 로드 시 첫 번째 섹션 활성화
+        window.addEventListener('load', () => {
+            scrollDots[0].classList.add('active');
         });
-      });
-    };
 
-    // 링크 테스트 함수
-    window.testLinks = function() {
-      const linkLayers = document.querySelectorAll('.linkLayer');
-      console.log('Testing links on', linkLayers.length, 'link layers');
-      
-      linkLayers.forEach((layer, index) => {
-        const links = layer.querySelectorAll('a');
-        console.log(`Link layer ${index} has ${links.length} links`);
-        
-        links.forEach((link, linkIndex) => {
-          console.log(`  Link ${linkIndex}:`, link.href, link.getBoundingClientRect());
+        // 화면 크기 변경 시 스크롤 위치 재조정
+        window.addEventListener('resize', () => {
+            const currentSection = Math.round(window.scrollY / window.innerHeight);
+            if (currentSection < sections.length) {
+                sections[currentSection].scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         });
-      });
-    };
 
-    // 페이지 로드 완료 후 테스트 함수 실행
-    setTimeout(() => {
-      if (isDebugMode) {
-        console.log('Running debug tests...');
-        window.testTextSelection();
-        window.testLinks();
-      }
-    }, 3000);
+        // 이미지 모달 기능
+        function openModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            
+            modalImage.src = imageSrc;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // 스크롤 방지
+        }
 
-    console.log('PDF viewer initialized');
-  </script>
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // 스크롤 복원
+        }
+
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // 계좌번호 복사 기능
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('계좌번호가 복사되었습니다!\n' + text);
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                alert('계좌번호 복사에 실패했습니다.');
+            });
+        }
+    </script>
 </body>
 </html>
-
