@@ -55,6 +55,7 @@
       border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       overflow: hidden;
+      min-height: 0; /* Flexbox에서 중요 */
     }
 
     .pdf-frame {
@@ -62,6 +63,7 @@
       height: 100%;
       border: none;
       border-radius: 15px;
+      display: block;
     }
 
     .loading {
@@ -118,10 +120,13 @@
       .pdf-container {
         margin: 0.5rem;
         border-radius: 10px;
+        height: calc(100vh - 120px); /* 헤더와 푸터 높이 제외 */
       }
 
       .pdf-frame {
         border-radius: 10px;
+        width: 100%;
+        height: 100%;
       }
 
       .footer {
@@ -141,6 +146,7 @@
       .pdf-container {
         margin: 0.3rem;
         border-radius: 8px;
+        height: calc(100vh - 100px); /* 더 작은 화면에서 높이 조정 */
       }
 
       .pdf-frame {
@@ -182,7 +188,7 @@
         <p>초대장을 불러오는 중...</p>
       </div>
       <iframe 
-        src="wedding.pdf#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&scrollbar=0&view=FitH" 
+        src="wedding.pdf#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=Fit" 
         class="pdf-frame"
         id="pdfFrame"
         onload="hideLoading()"
@@ -215,13 +221,45 @@
       }
     }
 
-    // PDF 로딩 상태 확인
-    setTimeout(() => {
+    // PDF 로딩 상태 확인 및 모바일 최적화
+    function optimizeForMobile() {
       const iframe = document.getElementById('pdfFrame');
-      if (iframe && iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
-        hideLoading();
+      const container = document.querySelector('.pdf-container');
+      
+      if (iframe && container) {
+        // 모바일에서 PDF가 제대로 표시되도록 추가 설정
+        if (window.innerWidth <= 768) {
+          // 모바일에서는 더 적극적으로 높이 조정
+          const headerHeight = document.querySelector('.header').offsetHeight;
+          const footerHeight = document.querySelector('.footer').offsetHeight;
+          const availableHeight = window.innerHeight - headerHeight - footerHeight - 20; // 여백 제외
+          
+          container.style.height = availableHeight + 'px';
+          iframe.style.height = '100%';
+        }
       }
-    }, 3000);
+    }
+
+    // 페이지 로드 시 실행
+    window.addEventListener('load', function() {
+      optimizeForMobile();
+      
+      // 3초 후 로딩 숨기기
+      setTimeout(() => {
+        hideLoading();
+      }, 3000);
+    });
+
+    // 화면 크기 변경 시 재조정
+    window.addEventListener('resize', function() {
+      optimizeForMobile();
+    });
+
+    // iframe 로드 완료 시
+    document.getElementById('pdfFrame').addEventListener('load', function() {
+      hideLoading();
+      optimizeForMobile();
+    });
   </script>
 </body>
 </html>
