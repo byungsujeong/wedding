@@ -269,7 +269,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             width: 100%;
-            justify-items: start;
+            justify-items: center;
         }
 
         .image-grid .grid-item {
@@ -585,6 +585,7 @@
 
             .image-grid {
                 gap: 12px;
+                justify-items: center;
             }
 
             .image-overlay-container {
@@ -680,6 +681,7 @@
 
             .image-grid {
                 gap: 10px;
+                justify-items: center;
             }
 
             .image-overlay-container {
@@ -865,12 +867,12 @@
             display: flex;
             align-items: center;
             margin-bottom: 25px;
-            gap: 40px;
-            margin-left: 75px;
+            gap: 0px;
+            margin-left: 0;
         }
         .info-img {
-            flex: 0 0 auto; /* 이미지 크기 고정 */
-            width: 15px; /* 이미지 너비 */
+            flex: 0 0 30%; /* 2/5 정도의 영역 */
+            width: auto;
             height: auto;
             display: flex;
             justify-content: center;
@@ -890,7 +892,7 @@
             white-space: nowrap;
         }
         .info-text {
-            flex: 1; /* 텍스트가 차지할 공간 */
+            flex: 0 0 70%; /* 3/5 정도의 영역 */
             text-align: left; /* 텍스트 정렬 */
             font-size: 16px;
             color: #666;
