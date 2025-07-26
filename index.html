@@ -16,7 +16,7 @@
     }
     .page-container {
       position: relative;
-      margin: 0 auto;
+      margin: 0 auto 10px auto;
       max-width: 100%;
     }
     canvas {
@@ -126,7 +126,7 @@
           const annotations = page.getAnnotations();
 
           Promise.all([renderTask.promise, textContent, annotations]).then(([_, textContent, annotations]) => {
-            // 텍스트 레이어 렌더링 (최신 API 사용)
+            // 텍스트 레이어 렌더링
             pdfjsLib.renderTextLayer({
               textContentSource: textContent,
               container: textLayerDiv,
@@ -136,12 +136,13 @@
 
             // 링크 레이어 수동 생성
             annotations.forEach(annotation => {
-              if (annotation.subtype === 'Link') {
+              if (annotation.subtype === 'Link' && annotation.url) {
                 const link = document.createElement('a');
-                link.href = annotation.url || '#';
+                link.href = annotation.url;
+                link.target = '_blank';
                 link.style.position = 'absolute';
                 link.style.left = annotation.rect[0] * viewport.scale + 'px';
-                link.style.top = (viewport.height - annotation.rect[1] * viewport.scale) + 'px';
+                link.style.top = (viewport.height - annotation.rect[3] * viewport.scale) + 'px';
                 link.style.width = (annotation.rect[2] - annotation.rect[0]) * viewport.scale + 'px';
                 link.style.height = (annotation.rect[3] - annotation.rect[1]) * viewport.scale + 'px';
                 link.style.display = 'block';
