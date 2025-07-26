@@ -1,264 +1,59 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wedding Invitation</title>
+  <meta charset="UTF-8" />
+  <title>PDF 페이지</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    * {
+    html, body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
+      overflow-x: hidden;
+      background-color: #fff;
     }
-
-    body, html {
-      height: 100%;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f5f5;
-      overflow: hidden;
-    }
-
-    .container {
-      position: relative;
+    #pdf-container {
       width: 100%;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
-
-    .header {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 1rem;
-      text-align: center;
-      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-      z-index: 10;
-    }
-
-    .header h1 {
-      color: #333;
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .header p {
-      color: #666;
-      font-size: 0.9rem;
-    }
-
-    .pdf-container {
-      flex: 1;
-      position: relative;
-      background: white;
-      margin: 1rem;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
-      min-height: 0; /* Flexbox에서 중요 */
-    }
-
-    .pdf-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      border-radius: 15px;
+    canvas {
       display: block;
-    }
-
-    .loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: #666;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #667eea;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .footer {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 1rem;
-      text-align: center;
-      box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .footer p {
-      color: #666;
-      font-size: 0.8rem;
-    }
-
-    /* 모바일 최적화 */
-    @media (max-width: 768px) {
-      .header {
-        padding: 0.8rem;
-      }
-
-      .header h1 {
-        font-size: 1.2rem;
-      }
-
-      .header p {
-        font-size: 0.8rem;
-      }
-
-      .pdf-container {
-        margin: 0.5rem;
-        border-radius: 10px;
-        height: calc(100vh - 120px); /* 헤더와 푸터 높이 제외 */
-      }
-
-      .pdf-frame {
-        border-radius: 10px;
-        width: 100%;
-        height: 100%;
-      }
-
-      .footer {
-        padding: 0.8rem;
-      }
-
-      .footer p {
-        font-size: 0.7rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .header h1 {
-        font-size: 1.1rem;
-      }
-
-      .pdf-container {
-        margin: 0.3rem;
-        border-radius: 8px;
-        height: calc(100vh - 100px); /* 더 작은 화면에서 높이 조정 */
-      }
-
-      .pdf-frame {
-        border-radius: 8px;
-      }
-    }
-
-    /* 다크모드 지원 */
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: #2c3e50;
-      }
-
-      .header, .footer {
-        background: rgba(44, 62, 80, 0.95);
-        color: white;
-      }
-
-      .header h1 {
-        color: white;
-      }
-
-      .header p, .footer p {
-        color: #bdc3c7;
-      }
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto !important;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>정병수 & 김선아 결혼예배</h1>
-      <p>2025년 9월 20일 오후 1시</p>
-    </div>
-    
-    <div class="pdf-container">
-      <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <p>초대장을 불러오는 중...</p>
-      </div>
-      <iframe 
-        src="wedding.pdf#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=Fit" 
-        class="pdf-frame"
-        id="pdfFrame"
-        onload="hideLoading()"
-        onerror="showError()">
-      </iframe>
-    </div>
+  <div id="pdf-container"></div>
 
-    <div class="footer">
-      <p>© 부산 사상구 가야대로213번길 12-19</p>
-      <p>고신교회 3층 본당</p>
-    </div>
-  </div>
-
+  <!-- PDF.js 라이브러리 로드 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
-    function hideLoading() {
-      const loading = document.getElementById('loading');
-      if (loading) {
-        loading.style.display = 'none';
-      }
-    }
+    const url = "wedding.pdf";  // 같은 폴더에 있는 PDF 파일 이름
 
-    function showError() {
-      const loading = document.getElementById('loading');
-      if (loading) {
-        loading.innerHTML = `
-          <div style="color: #e74c3c; font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
-          <p style="color: #e74c3c;">초대장을 불러올 수 없습니다.</p>
-          <p style="font-size: 0.8rem; margin-top: 0.5rem;">잠시 후 다시 시도해 주세요.</p>
-        `;
-      }
-    }
+    const container = document.getElementById('pdf-container');
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    // PDF 로딩 상태 확인 및 모바일 최적화
-    function optimizeForMobile() {
-      const iframe = document.getElementById('pdfFrame');
-      const container = document.querySelector('.pdf-container');
-      
-      if (iframe && container) {
-        // 모바일에서 PDF가 제대로 표시되도록 추가 설정
-        if (window.innerWidth <= 768) {
-          // 모바일에서는 더 적극적으로 높이 조정
-          const headerHeight = document.querySelector('.header').offsetHeight;
-          const footerHeight = document.querySelector('.footer').offsetHeight;
-          const availableHeight = window.innerHeight - headerHeight - footerHeight - 20; // 여백 제외
-          
-          container.style.height = availableHeight + 'px';
-          iframe.style.height = '100%';
-        }
-      }
-    }
+    pdfjsLib.getDocument(url).promise.then(pdf => {
+      const renderPage = num => {
+        pdf.getPage(num).then(page => {
+          const viewport = page.getViewport({ scale: 2.0 });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          container.appendChild(canvas);
 
-    // 페이지 로드 시 실행
-    window.addEventListener('load', function() {
-      optimizeForMobile();
-      
-      // 3초 후 로딩 숨기기
-      setTimeout(() => {
-        hideLoading();
-      }, 3000);
-    });
-
-    // 화면 크기 변경 시 재조정
-    window.addEventListener('resize', function() {
-      optimizeForMobile();
-    });
-
-    // iframe 로드 완료 시
-    document.getElementById('pdfFrame').addEventListener('load', function() {
-      hideLoading();
-      optimizeForMobile();
+          const renderContext = {
+            canvasContext: context,
+            viewport: viewport
+          };
+          page.render(renderContext).promise.then(() => {
+            if (num < pdf.numPages) renderPage(num + 1);
+          });
+        });
+      };
+      renderPage(1);
     });
   </script>
 </body>
