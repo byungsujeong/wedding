@@ -32,7 +32,6 @@
       right: 0;
       bottom: 0;
       overflow: hidden;
-      opacity: 0.2;
       line-height: 1.0;
       pointer-events: auto;
     }
@@ -43,20 +42,28 @@
       cursor: text;
       transform-origin: 0% 0%;
     }
-    .textLayer .highlight {
-      margin: -1px;
-      padding: 1px;
-      background-color: rgb(180, 0, 170);
-      border-radius: 4px;
-    }
-    .textLayer .highlight.selected {
-      background-color: rgb(0, 100, 0);
-    }
     .textLayer ::selection {
       background: rgba(0, 0, 255, 0.3);
     }
     .textLayer ::-moz-selection {
       background: rgba(0, 0, 255, 0.3);
+    }
+    .linkLayer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      pointer-events: auto;
+    }
+    .linkLayer > a {
+      position: absolute;
+      color: transparent;
+      text-decoration: none;
+    }
+    .linkLayer > a:hover {
+      background: rgba(255, 255, 0, 0.3);
     }
   </style>
 </head>
@@ -66,7 +73,7 @@
   <!-- PDF.js 라이브러리 로드 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
-    const url = "wedding.pdf";  // 같은 폴더에 있는 PDF 파일 이름
+    const url = "wedding.pdf";
 
     const container = document.getElementById('pdf-container');
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -98,6 +105,13 @@
           textLayerDiv.style.height = viewport.height + "px";
           pageContainer.appendChild(textLayerDiv);
 
+          // 링크 레이어 생성
+          const linkLayerDiv = document.createElement("div");
+          linkLayerDiv.className = "linkLayer";
+          linkLayerDiv.style.width = viewport.width + "px";
+          linkLayerDiv.style.height = viewport.height + "px";
+          pageContainer.appendChild(linkLayerDiv);
+
           const renderContext = {
             canvasContext: context,
             viewport: viewport
@@ -106,16 +120,25 @@
           // 페이지 렌더링
           const renderTask = page.render(renderContext);
           
-          // 텍스트 콘텐츠 가져오기
+          // 텍스트 콘텐츠와 링크 가져오기
           const textContent = page.getTextContent();
+          const annotations = page.getAnnotations();
 
-          Promise.all([renderTask.promise, textContent]).then(([_, textContent]) => {
+          Promise.all([renderTask.promise, textContent, annotations]).then(([_, textContent, annotations]) => {
             // 텍스트 레이어 렌더링
             pdfjsLib.renderTextLayer({
               textContent: textContent,
               container: textLayerDiv,
               viewport: viewport,
               textDivs: []
+            });
+
+            // 링크 레이어 렌더링
+            pdfjsLib.renderLinkLayer({
+              linkDivs: [],
+              links: annotations,
+              container: linkLayerDiv,
+              viewport: viewport
             });
             
             // 다음 페이지 렌더링
