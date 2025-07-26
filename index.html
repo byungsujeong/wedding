@@ -879,6 +879,23 @@
             align-items: center;
             position: relative;
         }
+        .info-text {
+            flex: 0 0 70%; /* 3/5 정도의 영역 */
+            text-align: left; /* 텍스트 정렬 */
+            font-size: 16px;
+            color: #666;
+            line-height: 1.5;
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .info-img-2 {
+            flex: 0 0 35%; /* 2/5 정도의 영역 */
+            width: auto;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
         .overlay-label {
             position: absolute;
             top: 50%;
@@ -891,8 +908,8 @@
             z-index: 2;
             white-space: nowrap;
         }
-        .info-text {
-            flex: 0 0 70%; /* 3/5 정도의 영역 */
+        .info-text-2 {
+            flex: 0 0 65%; /* 3/5 정도의 영역 */
             text-align: left; /* 텍스트 정렬 */
             font-size: 16px;
             color: #666;
@@ -941,6 +958,13 @@
             border: none;
             border-top: 1px solid #333;
             margin: 20px 0;
+        }
+        .info-row-2 {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 10px;
+            margin-left: 0;
         }
         .account-section {
             margin-bottom: 15px;
@@ -1180,23 +1204,23 @@
                 </div>
                 <div class="donation-content">
                     <hr class="divider">
-                    <div class="info-row">
-                        <div class="info-img">
+                    <div class="info-row-2">
+                        <div class="info-img-2">
                             <img src="images/slide9_img4.png" alt="신랑측 배경경" width="80" height="30" />
                             <div class="overlay-label">신랑측</div>
                         </div>
-                        <div class="info-text">
+                        <div class="info-text-2">
                             농협은행<br>
                             <span onclick="copyToClipboard('302-1178-9960-21')">302-1178-9960-21</span><br>
                             정 충 구
                         </div>
                     </div>
-                    <div class="info-row shinbu">
-                        <div class="info-img">
+                    <div class="info-row-2 shinbu">
+                        <div class="info-img-2">
                             <img src="images/slide9_img4.png" alt="신부측 배경" width="80" height="30" />
                             <div class="overlay-label">신부측</div>
                         </div>
-                        <div class="info-text">
+                        <div class="info-text-2">
                             부산은행<br>
                             <span onclick="copyToClipboard('113-2009-7344-01')">113-2009-7344-01</span><br>
                             대한예수교장로회<br>
