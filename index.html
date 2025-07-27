@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0, minimum-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
     <title>정병수 & 김선아 결혼예배</title>
     <meta property="og:description" content="소중한 날, 함께해 주세요" />
     <meta property="og:title" content="정병수 & 김선아 결혼예배에 초대합니다." />
@@ -14,6 +15,10 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-text-size-adjust: none !important;
+            -ms-text-size-adjust: none !important;
+            -moz-text-size-adjust: none !important;
+            text-size-adjust: none !important;
         }
 
         html, body {
@@ -1003,6 +1008,26 @@
             color: #333;
         }
 
+        .copy-btn {
+            background: none;
+            border: 1px solid #8ea682;
+            color: #8ea682;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 3px 0;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans', sans-serif;
+            position: relative;
+            z-index: 10;
+        }
+
+        .copy-btn:hover {
+            background-color: #8ea682;
+            color: white;
+        }
+
         .account-number-clickable {
             font-weight: 700;
             color: #333;
@@ -1219,7 +1244,8 @@
                         </div>
                         <div class="info-text-2">
                             농협은행<br>
-                            <span onclick="copyToClipboard('302-1178-9960-21')">302-1178-9960-21</span><br>
+                            <span>302-1178-9960-21</span><br>
+                            <button class="copy-btn" onclick="copyGroomAccount()">복사하기</button><br>
                             정 충 구
                         </div>
                     </div>
@@ -1230,7 +1256,8 @@
                         </div>
                         <div class="info-text-2">
                             부산은행<br>
-                            <span onclick="copyToClipboard('113-2009-7344-01')">113-2009-7344-01</span><br>
+                            <span>113-2009-7344-01</span><br>
+                            <button class="copy-btn" onclick="copyBrideAccount()">복사하기</button><br>
                             대한예수교장로회<br>
                             부산개금교회
                         </div>
@@ -1343,14 +1370,60 @@
             }
         });
 
-        // 계좌번호 복사 기능
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('계좌번호가 복사되었습니다!\n' + text);
-            }).catch(err => {
-                console.error('복사 실패:', err);
-                alert('계좌번호 복사에 실패했습니다.');
-            });
+        // 신랑측 계좌번호 복사 기능
+        function copyGroomAccount() {
+            console.log('신랑측 복사 함수 호출됨');
+            const accountNumber = '302-1178-9960-21';
+            
+            // 간단한 fallback 방식만 사용
+            const textArea = document.createElement("textarea");
+            textArea.value = accountNumber;
+            textArea.style.position = "absolute";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('신랑측 계좌번호가 복사되었습니다!\n' + accountNumber);
+                } else {
+                    alert('신랑측 계좌번호 복사에 실패했습니다. 수동으로 복사해주세요: ' + accountNumber);
+                }
+            } catch (err) {
+                console.error('신랑측 복사 실패:', err);
+                alert('신랑측 계좌번호 복사에 실패했습니다. 수동으로 복사해주세요: ' + accountNumber);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // 신부측 계좌번호 복사 기능
+        function copyBrideAccount() {
+            console.log('신부측 복사 함수 호출됨');
+            const accountNumber = '113-2009-7344-01';
+            
+            // 간단한 fallback 방식만 사용
+            const textArea = document.createElement("textarea");
+            textArea.value = accountNumber;
+            textArea.style.position = "absolute";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('신부측 계좌번호가 복사되었습니다!\n' + accountNumber);
+                } else {
+                    alert('신부측 계좌번호 복사에 실패했습니다. 수동으로 복사해주세요: ' + accountNumber);
+                }
+            } catch (err) {
+                console.error('신부측 복사 실패:', err);
+                alert('신부측 계좌번호 복사에 실패했습니다. 수동으로 복사해주세요: ' + accountNumber);
+            }
+            
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
